@@ -114,7 +114,7 @@ export default function CollectionsPage() {
             <Input
               type="file"
               accept=".xlsx,.xls,.csv"
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               onChange={handleFileUpload}
               disabled={uploading}
             />
