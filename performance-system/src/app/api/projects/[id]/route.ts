@@ -12,6 +12,7 @@ export async function PUT(
       where: { id: params.id },
       data: {
         name: data.name,
+        category: data.category,
         description: data.description,
         clientName: data.clientName,
         totalAmount: parseFloat(data.totalAmount || '0'),

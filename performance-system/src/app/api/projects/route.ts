@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     const project = await prisma.project.create({
       data: {
         name: data.name,
+        category: data.category,
         description: data.description,
         clientName: data.clientName,
         totalAmount: parseFloat(data.totalAmount || '0'),

@@ -81,6 +81,7 @@ model ScoreItem {
 model Project {
   id          String       @id @default(cuid())
   name        String       @unique
+  category    String?
   description String?
   clientName  String?
   totalAmount Float        @default(0)

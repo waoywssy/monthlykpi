@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 type Project = {
   id: string;
   name: string;
+  category: string | null;
   description: string | null;
   clientName: string | null;
   totalAmount: number;
@@ -28,6 +29,7 @@ export default function ProjectsPage() {
   // Form state
   const [formData, setFormData] = useState({
     name: '',
+      category: '',
     description: '',
     clientName: '',
     totalAmount: '',
@@ -92,6 +94,7 @@ export default function ProjectsPage() {
     setEditingProject(project);
     setFormData({
       name: project.name,
+      category: project.category || '',
       description: project.description || '',
       clientName: project.clientName || '',
       totalAmount: project.totalAmount.toString(),
@@ -104,6 +107,7 @@ export default function ProjectsPage() {
     setEditingProject(null);
     setFormData({
       name: '',
+      category: '',
       description: '',
       clientName: '',
       totalAmount: '',
@@ -134,6 +138,14 @@ export default function ProjectsPage() {
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
                   required 
+                />
+              </div>
+                            <div className="space-y-2">
+                <Label htmlFor="category">项目分类</Label>
+                <Input 
+                  id="category" 
+                  value={formData.category} 
+                  onChange={e => setFormData({...formData, category: e.target.value})} 
                 />
               </div>
               <div className="space-y-2">
@@ -193,6 +205,7 @@ export default function ProjectsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>项目名称</TableHead>
+                <TableHead>项目分类</TableHead>
                 <TableHead>客户名称</TableHead>
                 <TableHead>总金额</TableHead>
                 <TableHead>状态</TableHead>
@@ -212,6 +225,7 @@ export default function ProjectsPage() {
                 projects.map(project => (
                   <TableRow key={project.id}>
                     <TableCell className="font-medium">{project.name}</TableCell>
+                    <TableCell>{project.category || '-'}</TableCell>
                     <TableCell>{project.clientName || '-'}</TableCell>
                     <TableCell>{project.totalAmount.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' })}</TableCell>
                     <TableCell>

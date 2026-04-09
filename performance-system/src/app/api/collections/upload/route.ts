@@ -90,11 +90,19 @@ export async function POST(request: Request) {
             where: { name: projectName }
           });
           
+          if (project && projectCategory && !project.category) {
+            project = await prisma.project.update({
+              where: { id: project.id },
+              data: { category: projectCategory }
+            });
+          }
+          
           if (!project) {
             project = await prisma.project.create({
               data: {
                 name: projectName,
-                description: projectCategory,
+                category: projectCategory,
+                description: '',
                 clientName: '',
                 totalAmount: 0,
                 status: 'IN_PROGRESS'
