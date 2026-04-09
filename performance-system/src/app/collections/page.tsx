@@ -15,6 +15,7 @@ type Project = {
   id: string;
   name: string;
   clientName: string | null;
+  category: string | null;
 };
 
 type Collection = {
@@ -184,6 +185,7 @@ export default function CollectionsPage() {
                 <TableHead>回款日期</TableHead>
                 <TableHead>期间</TableHead>
                 <TableHead>项目名称</TableHead>
+                <TableHead>项目分类</TableHead>
                 <TableHead>客户名称</TableHead>
                 <TableHead className="text-right">回款金额</TableHead>
                 <TableHead>备注</TableHead>
@@ -204,6 +206,7 @@ export default function CollectionsPage() {
                     <TableCell>{format(new Date(collection.date), 'yyyy-MM-dd')}</TableCell>
                     <TableCell>{collection.period}</TableCell>
                     <TableCell className="font-medium">{collection.project?.name || '-'}</TableCell>
+                    <TableCell>{collection.project?.category || '-'}</TableCell>
                     <TableCell>{collection.project?.clientName || '-'}</TableCell>
                     <TableCell className="text-right font-medium text-green-600">
                       {collection.amount.toLocaleString('zh-CN', { style: 'currency', currency: 'CNY' })}
