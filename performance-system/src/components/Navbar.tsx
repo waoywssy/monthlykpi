@@ -22,7 +22,6 @@ export function Navbar() {
     { name: '员工管理', href: '/org', icon: Users },
     { name: '项目管理', href: '/projects', icon: FolderKanban },
     { name: '项目回款', href: '/collections', icon: Banknote },
-    { name: '业绩考核', href: '/dashboard', icon: BarChart3 },
     { name: '奖金分配', href: '/bonus', icon: BarChart3 },
     { name: '数据导入', href: '/upload', icon: UploadIcon },
   ];
