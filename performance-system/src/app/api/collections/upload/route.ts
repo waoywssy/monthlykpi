@@ -15,6 +15,10 @@ export async function POST(request: Request) {
     const buffer = Buffer.from(arrayBuffer);
     
     const workbook = xlsx.read(buffer, { type: 'buffer' });
+    
+    // 清空旧的回款数据，确保每次导入都是最新的状态，方便修正 Excel 后重新导入
+    await prisma.collection.deleteMany({});
+    
     let importedCount = 0;
     
     // Process all sheets (four quarters)
@@ -98,7 +102,7 @@ export async function POST(request: Request) {
             });
           }
           
-          // Check if exactly same record already exists to avoid duplicates
+          // Check if exactly same record already exists to avoid duplicates within the same file
           const existingCollection = await prisma.collection.findFirst({
             where: {
               projectId: project.id,
@@ -126,7 +130,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ 
       success: true, 
-      message: `成功导入 ${importedCount} 条回款记录`,
+      message: `成功导入 ${importedCount} 条回款记录（已覆盖旧数据）`,
       count: importedCount
     });
   } catch (error: any) {
