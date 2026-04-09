@@ -1,0 +1,76 @@
+# ===== 依赖 =====
+node_modules/
+.pnp
+.pnp.js
+
+# ===== Next.js =====
+.next/
+out/
+build/
+
+# ===== TypeScript =====
+*.tsbuildinfo
+
+# ===== Prisma =====
+# 开发数据库（生产环境数据库不应提交）
+prisma/dev.db
+prisma/dev.db-journal
+prisma/*.db
+prisma/*.db-journal
+
+# ===== 环境变量 =====
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# ===== 运行时缓存 =====
+node-compile-cache/
+tsx-*/
+.cache/
+
+# ===== macOS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===== 编辑器 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== Word 临时锁文件 =====
+.~lock.*
+~$*.docx
+~$*.xlsx
+
+# ===== 临时修复脚本 =====
+fix_*.js
+fix-*.js
+fix_*.sh
+update_*.js
+update_*.sh
+
+# ===== 日志 =====
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# ===== AI 工具配置（本地专用）=====
+.claude/
+.omc/
+
+# ===== 测试覆盖率 =====
+coverage/
+.nyc_output/
+
+# ===== 系统文件 =====
+Thumbs.db
+docs/
