@@ -31,9 +31,23 @@ export function DashboardActions({ periods, selectedPeriod, records }: Dashboard
 
     try {
       // 1. Prepare data for Excel — always sort by roster order (employee.sortOrder)
-      const sortedForExport = [...records].sort(
-        (a, b) => (a.employee.sortOrder ?? 999) - (b.employee.sortOrder ?? 999)
-      );
+      // Determine specific TM order
+      const tmOrder = ["龚进", "廖超平", "王小盼"];
+      
+      const sortedForExport = [...records].sort((a, b) => {
+        const aIndex = tmOrder.indexOf(a.employee.name);
+        const bIndex = tmOrder.indexOf(b.employee.name);
+        
+        // Both are TMs in our special list
+        if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+        // Only A is a TM
+        if (aIndex !== -1) return -1;
+        // Only B is a TM
+        if (bIndex !== -1) return 1;
+        
+        // Normal sort for others
+        return (a.employee.sortOrder ?? 999) - (b.employee.sortOrder ?? 999);
+      });
       const dataToExport = sortedForExport.map((r) => ({
         '姓名': r.employee.name,
         '团队': r.employee.team.name,
