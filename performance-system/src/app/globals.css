@@ -49,6 +49,8 @@
 }
 
 :root {
+  --font-sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --font-geist-mono: "SFMono-Regular", "JetBrains Mono", "Menlo", "Monaco", "Cascadia Mono", "Segoe UI Mono", monospace;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);

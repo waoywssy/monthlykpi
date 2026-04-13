@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import * as xlsx from 'xlsx';
+import { parseCollectionsWorkbook } from '@/lib/collections/import';
 
 export async function POST(request: Request) {
   try {
@@ -13,133 +13,50 @@ export async function POST(request: Request) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
-    const workbook = xlsx.read(buffer, { type: 'buffer' });
-    
-    // 清空旧的回款数据，确保每次导入都是最新的状态，方便修正 Excel 后重新导入
-    await prisma.collection.deleteMany({});
-    
-    let importedCount = 0;
-    
-    // Process all sheets (four quarters)
-    for (const sheetName of workbook.SheetNames) {
-      const sheet = workbook.Sheets[sheetName];
-      
-      // Convert to JSON
-      // Use header: 1 to get array of arrays first to find the real header row
-      // since Excel reports might have title rows or merged cells at the top
-      const rawData = xlsx.utils.sheet_to_json(sheet, { header: 1 });
-      
-      // Find the row index that contains "项目名称" or "回款金额"
-      let headerRowIndex = -1;
-      for (let i = 0; i < Math.min(10, rawData.length); i++) {
-        const row = rawData[i] as any[];
-        if (row && (row.includes('项目名称') || row.includes('回款金额'))) {
-          headerRowIndex = i;
-          break;
+    const rows = parseCollectionsWorkbook(buffer);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.collection.deleteMany({});
+
+      const projectIds = new Map<string, string>();
+      for (const row of rows) {
+        let projectId = projectIds.get(row.projectName);
+
+        if (!projectId) {
+          const project = await tx.project.upsert({
+            where: { name: row.projectName },
+            update: row.projectCategory
+              ? { category: row.projectCategory }
+              : {},
+            create: {
+              name: row.projectName,
+              category: row.projectCategory || null,
+              description: '',
+              clientName: '',
+              totalAmount: 0,
+              status: 'IN_PROGRESS',
+            },
+          });
+          projectId = project.id;
+          projectIds.set(row.projectName, project.id);
         }
-      }
-      
-      // If we found a header row, parse the data using it
-      if (headerRowIndex !== -1) {
-        // Parse starting from the header row
-        const data = xlsx.utils.sheet_to_json(sheet, { 
-          range: headerRowIndex,
-          defval: null
+
+        await tx.collection.create({
+          data: {
+            projectId,
+            amount: row.amount,
+            date: row.date,
+            period: row.period,
+            notes: row.notes || null,
+          },
         });
-        
-        for (const row of data as any[]) {
-          // Check for valid project name (skip totals/subtotals rows)
-          const projectName = row['项目名称'];
-          if (!projectName || projectName.toString().includes('合计') || projectName.toString().includes('小计')) {
-            continue;
-          }
-          
-          // Get amount
-          const amountStr = row['回款金额'];
-          if (amountStr === null || amountStr === undefined) continue;
-          
-          const amount = typeof amountStr === 'number' ? amountStr : parseFloat(amountStr.toString().replace(/,/g, ''));
-          if (isNaN(amount) || amount === 0) continue;
-          
-          // Parse date
-          let date = new Date();
-          const dateVal = row['回款日期'];
-          
-          if (dateVal) {
-            if (typeof dateVal === 'number') {
-              // Excel serial date format
-              date = new Date(Math.round((dateVal - 25569) * 86400 * 1000));
-            } else if (typeof dateVal === 'string') {
-              // Handle various string formats
-              date = new Date(dateVal.replace(/\//g, '-'));
-            }
-          }
-          
-          // Set period based on date (YYYY-MM)
-          const period = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          
-          // Extract notes
-          const notes = row['备   注'] || row['备注'] || row['说明'] || '';
-          
-          // Extract project classification and type
-          const projectCategory = row['项目分类'] || '';
-          
-          // Find or create project
-          let project = await prisma.project.findUnique({
-            where: { name: projectName }
-          });
-          
-          if (project && projectCategory && !project.category) {
-            project = await prisma.project.update({
-              where: { id: project.id },
-              data: { category: projectCategory }
-            });
-          }
-          
-          if (!project) {
-            project = await prisma.project.create({
-              data: {
-                name: projectName,
-                category: projectCategory,
-                description: '',
-                clientName: '',
-                totalAmount: 0,
-                status: 'IN_PROGRESS'
-              }
-            });
-          }
-          
-          // Check if exactly same record already exists to avoid duplicates within the same file
-          const existingCollection = await prisma.collection.findFirst({
-            where: {
-              projectId: project.id,
-              amount: amount,
-              period: period,
-            }
-          });
-          
-          if (!existingCollection) {
-            // Create collection record
-            await prisma.collection.create({
-              data: {
-                projectId: project.id,
-                amount,
-                date,
-                period,
-                notes: notes.toString()
-              }
-            });
-            importedCount++;
-          }
-        }
       }
-    }
+    });
 
     return NextResponse.json({ 
       success: true, 
-      message: `成功导入 ${importedCount} 条回款记录（已覆盖旧数据）`,
-      count: importedCount
+      message: `成功导入 ${rows.length} 条回款记录（已覆盖旧数据）`,
+      count: rows.length,
     });
   } catch (error: any) {
     console.error('Failed to upload collections:', error);

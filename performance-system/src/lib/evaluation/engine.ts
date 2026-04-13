@@ -1,5 +1,11 @@
 import { ParsedEvaluation } from '../word/parser';
 
+export interface ScoreInput {
+  weight: number;
+  selfScore: number;
+  managerScore: number;
+}
+
 export interface EvaluationResult {
   selfTotal: number;
   managerTotal: number;
@@ -22,10 +28,14 @@ export interface EvaluationResult {
  *   A → 1.5, B+ → 1.2, B → 1.0, C → 0.8, D → 0
  */
 export function calculateScore(parsed: ParsedEvaluation): EvaluationResult {
+  return calculateScoreFromScoreItems(parsed.scores);
+}
+
+export function calculateScoreFromScoreItems(scores: ScoreInput[]): EvaluationResult {
   let selfTotal = 0;
   let managerTotal = 0;
 
-  for (const s of parsed.scores) {
+  for (const s of scores) {
     selfTotal += s.selfScore * 10 * s.weight;
     managerTotal += s.managerScore * 10 * s.weight;
   }

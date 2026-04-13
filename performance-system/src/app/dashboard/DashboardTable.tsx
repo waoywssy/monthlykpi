@@ -33,7 +33,22 @@ export function DashboardTable({ records }: DashboardTableProps) {
         sorted.sort((a, b) => a.finalScore - b.finalScore);
         break;
       case 'roster':
-        sorted.sort((a, b) => (a.employee.sortOrder ?? 999) - (b.employee.sortOrder ?? 999));
+        // TM优先排序
+        const tmOrder = ["龚进", "廖超平", "王小盼"];
+        sorted.sort((a, b) => {
+          const aIndex = tmOrder.indexOf(a.employee.name);
+          const bIndex = tmOrder.indexOf(b.employee.name);
+
+          // 两者都是TM
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+          // 只有A是TM
+          if (aIndex !== -1) return -1;
+          // 只有B是TM
+          if (bIndex !== -1) return 1;
+
+          // 其他员工按花名册顺序
+          return (a.employee.sortOrder ?? 999) - (b.employee.sortOrder ?? 999);
+        });
         break;
     }
     return sorted;

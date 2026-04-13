@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { parseEvaluationWord } from '@/lib/word/parser';
-import { calculateScore } from '@/lib/evaluation/engine';
+import { calculateScore, type EvaluationResult } from '@/lib/evaluation/engine';
 
 export async function POST(request: Request) {
   try {
@@ -27,13 +27,17 @@ export async function POST(request: Request) {
     // Re-calculate totals to verify / fallback
     const calc = calculateScore(parsed);
 
-    // Use doc's own totals if they look sane, otherwise use calculated
+    // Use parsed totals only when they match the recalculated scores.
     const data = {
       ...parsed,
-      selfTotal: parsed.selfTotal || calc.selfTotal,
-      managerTotal: parsed.managerTotal || calc.managerTotal,
-      finalScore: parsed.finalScore || calc.finalScore,
-      rating: parsed.rating || calc.rating,
+      ...(hasConsistentSummary(parsed, calc)
+        ? {
+            selfTotal: parsed.selfTotal,
+            managerTotal: parsed.managerTotal,
+            finalScore: parsed.finalScore,
+            rating: parsed.rating,
+          }
+        : calc),
     };
 
     return NextResponse.json({ success: true, data });
@@ -44,4 +48,21 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+}
+
+function hasConsistentSummary(
+  parsed: {
+    selfTotal: number;
+    managerTotal: number;
+    finalScore: number;
+    rating: string;
+  },
+  calculated: EvaluationResult,
+) {
+  return (
+    Math.abs(parsed.selfTotal - calculated.selfTotal) <= 0.01 &&
+    Math.abs(parsed.managerTotal - calculated.managerTotal) <= 0.01 &&
+    Math.abs(parsed.finalScore - calculated.finalScore) <= 0.01 &&
+    parsed.rating === calculated.rating
+  );
 }

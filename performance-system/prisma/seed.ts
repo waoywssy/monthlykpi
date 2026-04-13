@@ -3,8 +3,8 @@
  *
  * Run with:  npx tsx prisma/seed.ts
  *
- * This script is idempotent — it upserts employees based on name,
- * and always updates team / role / sortOrder to match the master list.
+ * This script is idempotent — it upserts employees based on name + team,
+ * and always updates role / sortOrder to match the master list.
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -65,7 +65,7 @@ async function main() {
     const e = EMPLOYEES[i];
     const teamId = teamMap.get(e.team)!;
     await prisma.employee.upsert({
-      where: { name: e.name },
+      where: { name_teamId: { name: e.name, teamId } },
       update: {
         role: e.role,
         sortOrder: i + 1,

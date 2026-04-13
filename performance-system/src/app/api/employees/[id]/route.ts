@@ -8,6 +8,8 @@ export async function PUT(
   try {
     const { id } = await params;
     const data = await req.json();
+    const name = typeof data.name === 'string' ? data.name.trim() : '';
+    const teamId = typeof data.teamId === 'string' ? data.teamId.trim() : '';
     
     // Check if employee exists
     const existingEmployee = await prisma.employee.findUnique({
@@ -20,14 +22,36 @@ export async function PUT(
         { status: 404 }
       );
     }
+
+    if (!name || !teamId) {
+      return NextResponse.json(
+        { error: 'Name and teamId are required' },
+        { status: 400 }
+      );
+    }
+
+    const duplicateEmployee = await prisma.employee.findFirst({
+      where: {
+        id: { not: id },
+        name,
+        teamId,
+      },
+    });
+
+    if (duplicateEmployee) {
+      return NextResponse.json(
+        { error: 'Employee already exists in the selected team' },
+        { status: 409 }
+      );
+    }
     
     // Update employee
     const updatedEmployee = await prisma.employee.update({
       where: { id },
       data: {
-        name: data.name,
-        role: data.role || null,
-        teamId: data.teamId,
+        name,
+        role: typeof data.role === 'string' && data.role.trim() ? data.role.trim() : null,
+        teamId,
       },
       include: {
         team: {
@@ -75,6 +99,13 @@ export async function DELETE(
     if (existingEmployee.evaluations.length > 0) {
       return NextResponse.json(
         { error: 'Cannot delete employee with existing evaluations' },
+        { status: 400 }
+      );
+    }
+
+    if (existingEmployee.subordinates.length > 0) {
+      return NextResponse.json(
+        { error: 'Cannot delete employee with subordinates' },
         { status: 400 }
       );
     }

@@ -28,7 +28,7 @@ model Team {
 
 model Employee {
   id           String              @id @default(cuid())
-  name         String              @unique
+  name         String
   role         String?
   sortOrder    Int                 @default(999)
   isRegular    Boolean             @default(true)
@@ -41,6 +41,8 @@ model Employee {
   evaluations  EvaluationRecord[]
   createdAt    DateTime            @default(now())
   updatedAt    DateTime            @updatedAt
+  @@unique([name, teamId])
+  @@index([name])
 }
 
 model EvaluationRecord {
